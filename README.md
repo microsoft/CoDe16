@@ -31,7 +31,6 @@ Out of the 15 vulnerabilities, 14 have a CVSS score of 8.8, and CVE-2022-47391 h
 
 ## What this repo contains?
 * [Full white paper of the research](/white_paper.pdf)
-* [Demo Videos](/Demo%20Videos/) 
 * [Active tool to extract the CODESYS V3 runtime version of devices](/Activ%20Tool/)
 * [Wireshark Dissectorfor CODESYS V3 proprietary protocol](/Wireshark%20Dissector/)
 * [IDA Python scripts that we wrote during our research](/IDA%20Python%20script/)
