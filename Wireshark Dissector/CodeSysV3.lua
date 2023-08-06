@@ -14,7 +14,7 @@ priority = ProtoField.uint8("codesysv3.datagram.packet_info.priority", "Priority
     [2] = "High",
     [3] = "Emergency",
 }, 0xC0)
-signal = ProtoField.uint8("codesysv3.datagram.packet_info.signal", "Signal", base.DEC, {[0] = "False", [1] = "True"}, 0x40)
+signal = ProtoField.uint8("codesysv3.datagram.packet_info.signal", "Signal", base.DEC, {[0] = "False", [1] = "True"}, 0x20)
 type_address = ProtoField.uint8("codesysv3.datagram.packet_info.type_address", "Type Address", base.HEX, {
     [0] = "Full Address",
     [1] = "Relative Address"
@@ -36,10 +36,8 @@ receiver_length = ProtoField.uint8("codesysv3.datagram.lengths.receiver_length",
 sender_length = ProtoField.uint8("codesysv3.datagram.lengths.sender_length", "Sender Length", base.DEC)
 
 
-receiver_tcp_address = ProtoField.ipv4("codesysv3.datagram.receiver.tcp_address", "Receiver TCP Address")
-receiver_tcp_port = ProtoField.uint16("codesysv3.datagram.receiver.tcp_port", "Receiver TCP Port", base.DEC)
-sender_tcp_port = ProtoField.uint16("codesysv3.datagram.sender.tcp_port", "Sender TCP Port", base.DEC)
-sender_tcp_address = ProtoField.ipv4("codesysv3.datagram.sender.tcp_address", "Sender TCP Address")
+receiver_address = ProtoField.bytes("codesysv3.datagram.receiver.tcp_address", "Receiver Address")
+sender_address = ProtoField.bytes("codesysv3.datagram.sender.tcp_address", "Sender Address")
 
 
 receiver_udp_address = ProtoField.string("codesysv3.datagram.receiver.udp_address", "Receiver UDP Address")
@@ -50,6 +48,7 @@ sender_udp_address = ProtoField.string("codesysv3.datagram.sender.udp_address", 
 ns_server_subcmd = ProtoField.uint8("codesysv3.nsserver.subcmd", "subcmd", base.HEX, {
     [0xc201] = "Resolve Address Request",
     [0xc202] = "Resolve Name Request",
+    [0xc280] = "DeviceInfo"
 })
 ns_server_version = ProtoField.uint8("codesysv3.nsserver.version", "Version", base.HEX)
 ns_server_msg_id = ProtoField.uint8("codesysv3.nsserver.msg_id", "Message ID", base.HEX)
@@ -88,10 +87,16 @@ local channel_layer_types = {
     [0xc3] = "OpenChannel Request",
     [0xc4] = "CloseChannel",
     [0x83] = "OpenChannel Response",
+    [0x84] = "Channel Error",
 }
 
 channel_type = ProtoField.uint8("codesysv3.channel.type", "Type", base.HEX, channel_layer_types)
 channel_flags = ProtoField.uint8("codesysv3.channel.flags", "Flags", base.HEX)
+channel_error = ProtoField.uint16("codesysv3.channel.error", "Error", base.HEX, {
+    [0x182] = "Timeout Error",
+    [0x183] = "Service Layer Error",
+    [0x184] = "Checksum Error",
+})
 channel_version = ProtoField.uint16("codesysv3.channel.version", "Version", base.HEX)
 channel_reason = ProtoField.uint16("codesysv3.channel.channel_reason", "Reason", base.HEX, {
     [0] = "OK"
@@ -259,7 +264,7 @@ tag_data = ProtoField.bytes("codesysv3.tags.data", "Data")
 
 
 codesysv3_protocol.fields = {tcp_magic, tcp_length, magic, hop_count, header_length, priority, signal, type_address, length_data_block, 
-service_id, message_id, receiver_length, sender_length, receiver_tcp_address, receiver_tcp_port, sender_tcp_address, sender_tcp_port,
+service_id, message_id, receiver_length, sender_length, receiver_address, sender_address,
 ns_server_subcmd, ns_server_version, ns_server_msg_id, ns_server_msg_data,
 ns_client_subcmd, ns_client_version, ns_client_msg_id,
 ns_client_max_channels, ns_client_byte_order, ns_client_node_name_length, ns_client_device_name_length, ns_client_vendor_name_length,
@@ -267,7 +272,7 @@ ns_client_target_type, ns_client_target_id, ns_client_target_version, ns_client_
 ns_client_serial_length, ns_client_serial, padding, channel_type, channel_flags, channel_version, channel_msg_id, channel_receiver_buffer_size, channel_checksum,
 channel_channel_id, channel_reason, channel_max_channels, channel_blk_id, channel_ack_id, channel_remaining_data_size, channel_flags_is_request, channel_flags_is_first_payload
 ,service_protocol_id, service_additional_data, service_cmd_group, service_content_size, service_header_size, service_subcmd, service_session_id, service_is_response
-, tag_id, tag_type, tag_size, tag_data, receiver_udp_address, sender_udp_address, receiver_udp_port, sender_udp_port
+, tag_id, tag_type, tag_size, tag_data, channel_error
 }
 function codesysv3_protocol.init ()
     fragments = {}
@@ -323,18 +328,16 @@ local function dissect_tag(buffer, offset, tree)
 
         if tag_size_val > 0 then
                 if is_parent then
-                    return dissect_tags_layer(buffer, subtree, offset, tag_size_val)
+                    dissect_tags_layer(buffer, subtree, offset, tag_size_val)
                 else
                     subtree:add_le(tag_data, buffer(offset, tag_size_val))
-                    offset = offset + tag_size_val
                 end
-             
-               
+                offset = offset + tag_size_val
         end
     else
+        
         offset = buffer:len()
     end
-        
     return offset
 end
 
@@ -350,45 +353,16 @@ local function add_str_to_field(strs, val, field, unknown_str)
   end
 
 function dissect_tags_layer(buffer, tree, offset, length)
-    soffset = offset
-    print("Tag")
+    local soffset = offset
     while length > 0 and has_enough_data(buffer, soffset, length)  do
-        offset = dissect_tag(buffer, offset, tree)
+        offset = dissect_tag(buffer, soffset, tree)
         length = length - (offset - soffset)
         soffset = offset
-
     end
     
-    return offset
+    return soffset
 end 
 
-local function dissect_udp_ip(buffer, address, offset, format)
-    local ip_address = ""
-    local port = 0
-    local ip_address_parts = {}
-    for c in string.gmatch(address,  "%d+") do
-        table.insert(ip_address_parts, c)
-    end
-    if format  then
-        port = 1740 + buffer(offset, 1):uint()
-        ip_address = string.format("%d.%d.%d.%d", ip_address_parts[1], ip_address_parts[2], ip_address_parts[3], buffer(offset + 1, 1):uint())
-    else
-        for i = 1, 4, 1 do
-            local b = buffer(offset + i - 1, 1):uint()
-            local c = b
-            if b == 0 then
-                c = ip_address_parts[i]
-            end
-            ip_address = ip_address .. c
-            if i < 4 then
-                ip_address = ip_address.."."
-            end
-        end
-    end
-
-    return ip_address, port
-
-end
 
 local function add_info(pinfo, values, exists_format, non_exists_format, val)
     if values[val] ~= nil then
@@ -480,7 +454,10 @@ local function dissect_codesys_channel(buffer, pinfo, tree, offset)
                 subtree:add_le(channel_reason, buffer(offset + 10, 2))
                 subtree:add_le(channel_channel_id, buffer(offset + 12, 2))  
                 subtree:add_le(channel_receiver_buffer_size, buffer(offset + 14, 4))
-                pinfo.cols['info']:append(string.format(", (Channel: 0x%04x)", buffer(offset + 12, 2):le_uint()))
+            elseif has_enough_data(buffer, offset + 6, 4) and type == 0x84 then
+                subtree:add_le(channel_channel_id, buffer(offset + 6, 2))  
+                subtree:add_le(channel_error, buffer(offset + 8, 2))
+                pinfo.cols['info']:append(string.format(", (Channel: 0x%04x)", buffer(offset + 6, 2):le_uint()))
             elseif has_enough_data(buffer, offset + 6, 4) and type == 0xc4 then
                 subtree:add_le(channel_channel_id, buffer(offset + 6, 2))
                 subtree:add_le(channel_reason, buffer(offset + 8, 2))
@@ -505,10 +482,10 @@ local function dissect_codesys_channel(buffer, pinfo, tree, offset)
             if is_first_packet then
                 subtree:add_le(channel_remaining_data_size, buffer(offset + 10, 4))
                 subtree:add_le(channel_checksum, buffer(offset + 14, 4))
-                next_layer_data = offset + 18
+                next_layer_data = offset + 18 
                 segment_size = buffer(offset + 10, 4):le_uint()
             else
-                next_layer_data = offset + 10
+                next_layer_data = offset + 10 
                 segment_size = buffer(offset + 10):len()
             end
             if is_first_packet and has_enough_data(buffer, offset + 18, segment_size) then
@@ -580,8 +557,9 @@ local function dissect_codesys_nsclient(buffer, pinfo, tree, offset)
         subtree:add_le(ns_client_version, buffer(offset + 2, 2))
         subtree:add_le(ns_client_msg_id, buffer(offset + 4, 4))
         local version = buffer(offset + 2, 2):le_uint()
+        local ns_subcmd = buffer(offset, 2):le_uint()
         offset = offset +  8
-        if has_enough_data(buffer, offset + 8, 24) and (version == 0x103 or version == 0x400) then
+        if has_enough_data(buffer, offset + 8, 24) and (version == 0x103 or version == 0x400) and ns_subcmd == 0xc280 then
             subtree:add_le(ns_client_max_channels, buffer(offset, 2)) 
             subtree:add_le(ns_client_byte_order, buffer(offset + 2, 1)) 
             local node_name_offset = buffer(offset + 4, 2):uint()
@@ -640,7 +618,7 @@ local function dissect_codesys_pdu(buffer, pinfo, tree, offset, is_udp)
         local hopsubtree = subtree:add(codesysv3_protocol, buffer(offset + 1, 1), string.format("Hop Info Byte(0x%x)", buffer(offset + 1, 1):uint()))
         hopsubtree:add(hop_count, buffer(offset + 1, 1))
         hopsubtree:add(header_length, buffer(offset + 1, 1))
-
+        local header_size = bit.band(buffer(offset + 1, 1):uint(), 0x07) * 2
         local packetinfosubtree = subtree:add(codesysv3_protocol, buffer(offset + 2, 1), string.format("Packet Info Byte(0x%x)", buffer(offset + 2, 1):uint()))
         packetinfosubtree:add(priority, buffer(offset + 2, 1))
         packetinfosubtree:add(signal, buffer(offset + 2, 1))
@@ -657,45 +635,18 @@ local function dissect_codesys_pdu(buffer, pinfo, tree, offset, is_udp)
         address_lengths:add(receiver_length, bit.band(lengths_byte, 0x0F) * 2)
         local sender_len = bit.rshift(lengths_byte, 4) * 2
         local receiver_len = bit.band(lengths_byte, 0x0F) * 2
-        local address_tree = subtree:add(codesysv3_protocol, buffer(offset + 6, address_length), "Network Addresses")
-        if not is_udp then
-           
-            if receiver_len >= 5 and has_enough_data(buffer, offset + 6, receiver_len) then
-                address_tree:add(receiver_tcp_port, buffer(offset + 6, 2))
-                address_tree:add(receiver_tcp_address, buffer(offset + 8, 4))
-            end
-
-            if sender_len >= 5 and has_enough_data(buffer, offset + 6 + receiver_len, sender_len) then
-                address_tree:add(sender_tcp_port, buffer(offset + 6 + receiver_len, 2))
-                address_tree:add(sender_tcp_address, buffer(offset + 8 + receiver_len, 4))
-            end
-
-        else
-            local short_format = (receiver_len < 4 and receiver_len > 0) or (sender_len < 4 and sender_len > 0)
-            if receiver_len > 0 and has_enough_data(buffer, offset + 6, receiver_len) then
-                local ip_address, port = dissect_udp_ip(buffer, tostring(pinfo.dst), offset + 6, short_format)
-                if short_format then
-                    address_tree:add(receiver_udp_address, buffer(offset + 7, 1), ip_address)
-                    address_tree:add(receiver_udp_port, buffer(offset + 6, 1), port)
-                else
-                    address_tree:add(receiver_udp_address, buffer(offset + 6, 4), ip_address)
-                end
-
-
-            end
-            if sender_len > 0 and has_enough_data(buffer, offset + 6 + receiver_len, sender_len) then
-                
-                local ip_address, port = dissect_udp_ip(buffer, tostring(pinfo.src), offset + 6 + receiver_len, short_format)
-                if short_format then
-                    address_tree:add(sender_udp_address, buffer(offset + receiver_len + 7, 1), ip_address)
-                    address_tree:add(sender_udp_port, buffer(offset + 6 + receiver_len, 1), port)
-                else
-                    address_tree:add(sender_udp_address, buffer(offset + 6 + receiver_len, 4), ip_address)
-                end
-            end
+        offset = offset + header_size
+        address_length = sender_len + receiver_len
+        local address_tree = subtree:add(codesysv3_protocol, buffer(offset, address_length), "Network Addresses")
+        if receiver_len > 0 then
+            address_tree:add(receiver_address, buffer(offset, receiver_len))
         end
-
-        offset = offset +  6 + address_length
+        if sender_len > 0 then
+            address_tree:add(sender_address, buffer(offset + receiver_len, sender_len))
+        end
+ 
+        
+        offset = offset + address_length
         padding_len = math.fmod(offset, 4)
         if padding_len ~= 0 then
             subtree:add(padding, buffer(offset, padding_len))
