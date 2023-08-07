@@ -54,6 +54,7 @@ class FilesTransfer:
                 # Close the file
                 self._channel.send(CmdGroup.CmpFileTransfer, 8, Tag(0x07, session_id + src_file),
                           Tag(0x02, file_size_data))
+                layer, tags = self._channel.read()
             else:
                 self.logger.error(f"Successfully open the file {src_file}, error_code:{error_code}")
         except Exception as ex:
