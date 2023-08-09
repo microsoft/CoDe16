@@ -1,42 +1,47 @@
 # CoDe16
 ## Intro
-Microsoft cyber-physical system (CPS) researchers recently identified 15 high severity vulnerabilities in the CODESYS V3 software development kit (SDK), a software development environment widely used to program and engineer programmable logic controllers (PLCs). Exploiting the discovered vulnerabilities, which affect all versions of CODESYS V3 prior to version 3.5.19.0, could put operational technology (OT) infrastructure at risk of attacks, such as remote code execution (RCE) and denial of service (DoS). The discovery of these vulnerabilities highlights the critical importance of ensuring the security of industrial control systems and underscores the need for continuous monitoring and protection of these environments.
-
-CODESYS is compatible with approximately 1,000 different device types from over 500 manufacturers and several million devices who that use the solution to implement the international industrial standard IEC 611131-3. A DoS attack against a device using a vulnerable version of CODESYS could enable threat actors to shut down a power plant, while remote code execution could create a backdoor for devices and let attackers tamper with operations, cause a PLC to run in an unusual way, or steal critical information. Nonetheless, exploiting the discovered vulnerabilities requires user authentication, as well as deep knowledge of the proprietary protocol of CODESYS V3 and the structure of the different services that the protocol uses.
-
-Microsoft researchers reported the discovery to CODESYS in September 2022, and worked closely with CODESYS to ensure that the vulnerabilities are patched. Information on the patch released by CODESYS to address these vulnerabilities can be found here [CODESYS Development System V3 | CODESYS Store International](https://store.codesys.com/engineering/codesys.html?___store=en). We strongly urge CODESYS users to apply these security updates as soon as possible. We also thank CODESYS for their collaboration and recognizing the urgency in addressing these vulnerabilities. 
-
-Below is the list of all discovered vulnerabilities: 
-
-| CVE | CODESYS component | Impact |
-| --- | --- | --- |
-| [CVE-2022-47379](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47379) | CMPapp | DoS, RCE  |
-| [CVE-2022-47380](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47380) | CMPapp | DoS, RCE  |
-| [CVE-2022-47381](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47381) | CMPapp | DoS, RCE  |
-| [CVE-2022-47382](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47382) | CmpTraceMgr | DoS, RCE  |
-| [CVE-2022-47383](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47383) | CmpTraceMgr | DoS, RCE  |
-| [CVE-2022-47384](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47384) | CmpTraceMgr | DoS, RCE  |
-| [CVE-2022-47385](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47385) | CmpAppForce | DoS, RCE  |
-| [CVE-2022-47386](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47386) | CmpTraceMgr | DoS, RCE  |
-| [CVE-2022-47387](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47387) | CmpTraceMgr | DoS, RCE  |
-| [CVE-2022-47388](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47388) | CmpTraceMgr | DoS, RCE  |
-| [CVE-2022-47389](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47389) | CmpTraceMgr | DoS, RCE  |
-| [CVE-2022-47390](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47390) | CmpTraceMgr | DoS, RCE  |
-| [CVE-2022-47391](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47391) | CMPDevice | DoS  |
-| [CVE-2022-47392](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47392) | CmpApp/ CmpAppBP/ CmpAppForce | DoS  |
-| [CVE-2022-47393](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47393) | CmpFiletransfer | DoS  |
+Microsoft’s cyber physical system researchers recently identified multiple high-severity vulnerabilities in the CODESYS V3 software development kit (SDK)
+a software development environment widely used to program and engineer programmable logic controllers (PLCs). 
+Exploitation of the discovered vulnerabilities, which affect all versions of CODESYS V3 prior to version 3.5.19.0, 
+could put operational technology (OT) infrastructure at risk of attacks, such as remote code execution (RCE) and denial of service (DoS). 
+The discovery of these vulnerabilities highlights the critical importance of ensuring the security of industrial control systems and underscores the need for continuous monitoring and protection of these environments.
 
 
-Out of the 15 vulnerabilities, 14 have a CVSS score of 8.8, and CVE-2022-47391 has a score of 7.5.   
+CODESYS is [compatible](https://www.codesys.com/the-system/codesys-inside.html) with approximately 1,000 different device types from over 500 manufacturers and several million devices that use the solution to implement the international industrial standard IEC 611131-3. A DoS attack against a device using a vulnerable version of CODESYS could enable threat actors to shut down a power plant, while remote code execution could create a backdoor for devices and let attackers tamper with operations, cause a PLC to run in an unusual way, or steal critical information. Exploiting the discovered vulnerabilities, however, requires user authentication, as well as deep knowledge of the proprietary protocol of CODESYS V3 and the structure of the different services that the protocol uses.
+
+Microsoft researchers reported the discovery to CODESYS in September 2022 and worked closely with CODESYS to ensure that the vulnerabilities are patched. Information on the patch released by CODESYS to address these vulnerabilities can be found here: [Security update for CODESYS Control V3](https://customers.codesys.com/index.php?eID=dumpFile&t=f&f=17554&token=5444f53b4c90fe37043671a100dffa75305d1825&download=). We strongly urge CODESYS users to apply these security updates as soon as possible. We also thank CODESYS for their collaboration and recognizing the urgency in addressing these vulnerabilities.
+
+Below is a list of the discovered vulnerabilities discussed in this blog: 
+
+| CVE | CODESYS component | Impact | CVSS score |
+| --- | --- | --- | --- |
+| [CVE-2022-47379](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47379) | CMPapp | DoS, RCE  | 8.8 | 
+| [CVE-2022-47380](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47380) | CMPapp | DoS, RCE  | 8.8 | 
+| [CVE-2022-47381](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47381) | CMPapp | DoS, RCE  | 8.8 | 
+| [CVE-2022-47382](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47382) | CmpTraceMgr | DoS, RCE  | 8.8 | 
+| [CVE-2022-47383](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47383) | CmpTraceMgr | DoS, RCE  | 8.8 | 
+| [CVE-2022-47384](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47384) | CmpTraceMgr | DoS, RCE  | 8.8 | 
+| [CVE-2022-47385](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47385) | CmpAppForce | DoS, RCE  | 8.8 | 
+| [CVE-2022-47386](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47386) | CmpTraceMgr | DoS, RCE  | 8.8 | 
+| [CVE-2022-47387](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47387) | CmpTraceMgr | DoS, RCE  | 8.8 | 
+| [CVE-2022-47388](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47388) | CmpTraceMgr | DoS, RCE  | 8.8 | 
+| [CVE-2022-47389](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47389) | CmpTraceMgr | DoS, RCE  | 8.8 | 
+| [CVE-2022-47390](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47390) | CmpTraceMgr | DoS, RCE  | 8.8 | 
+| [CVE-2022-47391](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47391) | CMPDevice | DoS  | 7.5 | 
+| [CVE-2022-47392](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47392) | CmpApp/ CmpAppBP/ CmpAppForce | DoS  | 8.8 | 
+| [CVE-2022-47393](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47393) | CmpFiletransfer | DoS  | 8.8 | 
+
+
+ 
 
 ## What this repo contains?
-* [Full white paper of the research](/white_paper.pdf)
+* [Full white paper of the research](/whitepaper.pdf)
 * [Active tool to extract the CODESYS V3 runtime version of devices](/Active%20Tool/)
 * [Wireshark Dissectorfor CODESYS V3 proprietary protocol](/Wireshark%20Dissector/)
 * [IDA Python scripts that we wrote during our research](/IDA%20Python%20script/)
-* [Demo Videos](/Demo%20Videos/)
 
-## Researchers
+
+## Researcher
 * **Vladimir Tokarev, Microsoft Threat Intelligence Community**
 
 

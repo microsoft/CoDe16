@@ -1,14 +1,23 @@
+import argparse
 from codesysv3_protocol import *
 from log import init_logger
-import logging
-import argparse
+from ipaddress import ip_address, IPv4Address
 
-def print_device_info(device_info):
+
+def is_legal_ip_address(ip: str) -> bool:
+    try:
+        return isinstance(ip_address(ip), IPv4Address)
+    except:
+        return False
+
+
+def print_device_info(device_info: dict):
     print("Device Info:")
     print("\tNode Name:", device_info['node_name'])
     print("\tDevice Name:", device_info['device_name'])
     print("\tVendor Name:", device_info['vendor_name'])
     print("\tFirmware:", device_info['firmware_str'])
+
 
 def main():
     init_logger()
@@ -19,11 +28,13 @@ def main():
     parser.add_argument('--password', type=str, default="", required=False,
                         help='The password that required to log into the plc.')
     parser.add_argument('--dst_ip', type=str, default=None, required=True,
-                        help='The ip address of the remote plc.')
+                        help='The IP address of the remote plc.')
     parser.add_argument('--src_ip', type=str, default=None, required=True,
-                        help='R|The address of the machine that will run this script. \n \
-                        (NOTE: should be in same subnet as the PLC)')
+                        help='The IP address of the machine that will run this script.')
     args = parser.parse_args()
+
+    if False in (is_legal_ip_address(args.dst_ip), is_legal_ip_address(args.src_ip)):
+        parser.error("Illegal IP address")
 
     try:
         rtsversion = None
