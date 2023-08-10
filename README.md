@@ -32,10 +32,10 @@ Below is a list of the discovered vulnerabilities discussed in this blog:
 | [CVE-2022-47393](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-47393) | CmpFiletransfer | DoS  | 8.8 | 
 
 
- 
+ The security blog can be found in the following address:[https://aka.ms/codesys-v3-sdk-vulnerabilities](https://aka.ms/codesys-v3-sdk-vulnerabilities)
 
 ## What this repo contains?
-* [Full white paper of the research](/whitepaper.pdf)
+* [Full white paper of the research](/Vulnerabilities-in-CODESYS-V3-SDK-could-lead-to-RCE-or-DoS.pdf)
 * [Active tool to extract the CODESYS V3 runtime version of devices](/Active%20Tool/)
 * [Wireshark Dissectorfor CODESYS V3 proprietary protocol](/Wireshark%20Dissector/)
 * [IDA Python scripts that we wrote during our research](/IDA%20Python%20script/)
